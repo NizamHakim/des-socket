@@ -12,7 +12,10 @@ def client_program():
     try:
         while True:
             message = input("message to send: ")
-            encryptedMessage = des.ecbEncrypt(message, KEY)
+            
+            # encryptedMessage = des.ecbEncrypt(message, KEY) # ECB mode
+            encryptedMessage = des.cbcEncrypt(message, KEY, KEY[::-1]) # CBC mode
+            
             print(f"sending encrypted message: {encryptedMessage}")
             client_socket.send(encryptedMessage.encode('utf-8'))
             

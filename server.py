@@ -21,7 +21,9 @@ def server_program():
             break
         print(f'receive encrypted message: {data}')
         
-        decryptedData = des.ecbDecrypt(data, KEY)
+        # decryptedData = des.ecbDecrypt(data, KEY) # ECB mode
+        decryptedData = des.cbcDecrypt(data, KEY, KEY[::-1]) # CBC mode
+        
         print(f'decrypted message: {decryptedData}')
 
     client_socket.close()

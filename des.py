@@ -175,9 +175,7 @@ def stringXor(input1, input2):
             output += '1'
     return output
 
-def encrypt(input, key):
-    binaryInput = strToBin(input)
-    mainKey64 = strToBin(key)
+def encrypt(binaryInput, mainKey64):
     left, right = initialPermutation(binaryInput) # 32 bits each
     keys = keyScheduling(mainKey64)
     for i in range(16):
@@ -191,9 +189,7 @@ def encrypt(input, key):
     output = inverseInitialPermutation(right + left)
     return binToStr(output)
 
-def decrypt(input, key):
-    binaryInput = strToBin(input)
-    mainKey64 = strToBin(key)
+def decrypt(binaryInput, mainKey64):
     left, right = initialPermutation(binaryInput) # 32 bits each
     keys = keyScheduling(mainKey64)
     for i in range(16):
@@ -224,7 +220,7 @@ def ecbEncrypt(input, key):
     
     cipherText = ""
     for block in blocks:
-        cipherText += encrypt(block, key)
+        cipherText += encrypt(strToBin(block), strToBin(key))
     return cipherText
 
 def ecbDecrypt(input, key):
@@ -234,7 +230,40 @@ def ecbDecrypt(input, key):
     
     padded = ""
     for block in blocks:
-        padded += decrypt(block, key)
+        padded += decrypt(strToBin(block), strToBin(key))
 
     plainText = pkcs5Unpadding(padded)    
+    return plainText
+
+def cbcEncrypt(input, key, iv):
+    padded = pkcs5Padding(input)
+    
+    blocks = []
+    for i in range(0, len(padded), 8):
+        blocks.append(padded[i:i+8])
+    
+    cipherText = ""
+    prevCipherText = strToBin(iv)
+    for block in blocks:
+        xorWithPrev = stringXor(strToBin(block), prevCipherText)
+        cipherTextBlock = encrypt(xorWithPrev, strToBin(key))
+        cipherText += cipherTextBlock
+        prevCipherText = strToBin(cipherTextBlock)
+        
+    return cipherText
+
+def cbcDecrypt(input, key, iv):
+    blocks = []
+    for i in range(0, len(input), 8):
+        blocks.append(input[i:i+8])
+    
+    plainText = ""
+    prevCipherText = strToBin(iv)
+    for block in blocks:
+        decryptedBlock = decrypt(strToBin(block), strToBin(key))
+        xorWithPrev = stringXor(strToBin(decryptedBlock), prevCipherText)
+        plainText += binToStr(xorWithPrev)
+        prevCipherText = strToBin(block)
+        
+    plainText = pkcs5Unpadding(plainText)
     return plainText
